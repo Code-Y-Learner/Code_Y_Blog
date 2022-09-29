@@ -10,9 +10,10 @@ from flask_login import UserMixin, login_user, LoginManager, login_required, cur
 from forms import LoginForm, RegisterForm, CreatePostForm, CommentForm, EditCatForm
 from flask_gravatar import Gravatar
 from flask_wtf import FlaskForm, CSRFProtect
+import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '77mZwMVO%S1RM6c9'
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
 ckeditor = CKEditor(app)
 Bootstrap(app)
 gravatar = Gravatar(app, size=100, rating='g', default='retro', force_default=False, force_lower=False, use_ssl=False, base_url=None)
@@ -21,7 +22,7 @@ app.config['CKEDITOR_ENABLE_CSRF'] = True
 csrf = CSRFProtect(app)
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()
@@ -220,7 +221,7 @@ def edit_post(post_id):
         img_url=post.img_url,
         author=current_user,
         body=post.body,
-        category=Category.classification
+        category=post.category_id
     )
     if edit_form.validate_on_submit():
         post.title = edit_form.title.data

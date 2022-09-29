@@ -7,14 +7,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import LoginForm, RegisterForm, CreatePostForm, CommentForm
+from forms import LoginForm, RegisterForm, CreatePostForm, CommentForm, EditCatForm
 from flask_gravatar import Gravatar
+from flask_wtf import FlaskForm, CSRFProtect
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 ckeditor = CKEditor(app)
 Bootstrap(app)
 gravatar = Gravatar(app, size=100, rating='g', default='retro', force_default=False, force_lower=False, use_ssl=False, base_url=None)
+# enable CSRF protection
+app.config['CKEDITOR_ENABLE_CSRF'] = True
+csrf = CSRFProtect(app)
 
 ##CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
@@ -39,6 +43,10 @@ class User(UserMixin, db.Model):
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
+class Category(db.Model):
+    __tablename__ = "categories"
+    id = db.Column(db.Integer,primary_key=True)
+    classification = db.Column(db.String(100))
 
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
@@ -51,7 +59,8 @@ class BlogPost(db.Model):
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
     comments = relationship("Comment", back_populates="parent_post")
-
+    category_id = db.Column(db.Integer, db.ForeignKey("categories.classification", ondelete='CASCADE'))
+    category = relationship("Category")
 
 class Comment(db.Model):
     __tablename__ = "comments"
@@ -61,7 +70,9 @@ class Comment(db.Model):
     parent_post = relationship("BlogPost", back_populates="comments")
     comment_author = relationship("User", back_populates="comments")
     text = db.Column(db.Text, nullable=False)
-db.create_all()
+
+# db.drop_all()
+# db.create_all()
 
 
 def admin_only(f):
@@ -75,9 +86,18 @@ def admin_only(f):
 
 @app.route('/')
 def get_all_posts():
+    categories_sql = db.session.query(Category.classification).all()
+    categories = [str(category).split("'")[1] for category in set(categories_sql)]
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts, current_user=current_user)
+    return render_template("index.html",all_categories=categories, all_posts=posts, current_user=current_user)
 
+
+@app.route('/category/<category_name>', methods=["GET", "POST"])
+def get_category(category_name):
+    categories_sql = db.session.query(Category.classification).all()
+    categories = [str(category).split("'")[1] for category in set(categories_sql)]
+    posts= BlogPost.query.filter_by(category_id=category_name).all()
+    return render_template("index.html",all_categories=categories, all_posts=posts, current_user=current_user)
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
@@ -135,6 +155,7 @@ def logout():
     return redirect(url_for('get_all_posts'))
 
 
+
 @app.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
     form = CommentForm()
@@ -177,7 +198,8 @@ def add_new_post():
             body=form.body.data,
             img_url=form.img_url.data,
             author=current_user,
-            date=date.today().strftime("%B %d, %Y")
+            date=date.today().strftime("%B %d, %Y"),
+            category = Category(classification = form.category.data)
         )
         db.session.add(new_post)
         db.session.commit()
@@ -197,7 +219,8 @@ def edit_post(post_id):
         subtitle=post.subtitle,
         img_url=post.img_url,
         author=current_user,
-        body=post.body
+        body=post.body,
+        category=Category.classification
     )
     if edit_form.validate_on_submit():
         post.title = edit_form.title.data
@@ -220,4 +243,4 @@ def delete_post(post_id):
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True, port=5000)

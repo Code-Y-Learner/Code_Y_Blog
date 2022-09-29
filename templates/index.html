@@ -1,14 +1,14 @@
 {% include "header.html" %}
 
   <!-- Page Header -->
-  <header class="masthead" style="background-image: url('https://images.unsplash.com/photo-1470092306007-055b6797ca72?ixlib=rb-1.2.1&auto=format&fit=crop&w=668&q=80')">
+  <header class="masthead" style="background-image: url('https://elliethe.sirv.com/Images/pexels-pixabay-356056.jpg')">
     <div class="overlay"></div>
     <div class="container">
       <div class="row">
         <div class="col-lg-8 col-md-10 mx-auto">
           <div class="site-heading">
-            <h1>Angela's Blog</h1>
-            <span class="subheading">A collection of random musings.</span>
+            <h1>Code.Y.Learner's Blog</h1>
+            <span class="subheading">IT 공부 일상다반사.</span>
           </div>
         </div>
       </div>
@@ -18,7 +18,18 @@
   <!-- Main Content -->
   <div class="container">
     <div class="row">
-      <div class="col-lg-8 col-md-10 mx-auto">
+      <div class="col-lg-2 col-md-3 mx-auto">
+        {% for category in all_categories %}
+        <div class="category">
+          <ul class="list-group">
+            <li class="list-group-item">
+              <a href="{{url_for('get_category',category_name = category)}}">{{category}}</a>
+            </li>
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="col-lg-6 col-md-8 mx-auto">
         {% for post in all_posts %}
         <div class="post-preview">
           <a href="{{ url_for('show_post', post_id=post.id) }}">

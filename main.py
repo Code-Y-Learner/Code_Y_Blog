@@ -7,13 +7,18 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
+
+import config
 from forms import LoginForm, RegisterForm, CreatePostForm, CommentForm, EditCatForm
 from flask_gravatar import Gravatar
 from flask_wtf import FlaskForm, CSRFProtect
 import os
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY","77mZwMVO%S1RM6c9")
+try:
+    app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+except:
+    app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY",config.secret_key)
 ckeditor = CKEditor(app)
 Bootstrap(app)
 gravatar = Gravatar(app, size=100, rating='g', default='retro', force_default=False, force_lower=False, use_ssl=False, base_url=None)
@@ -22,7 +27,10 @@ app.config['CKEDITOR_ENABLE_CSRF'] = True
 csrf = CSRFProtect(app)
 
 ##CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///blog.db")
+try:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
+except:
+    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///blog.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()

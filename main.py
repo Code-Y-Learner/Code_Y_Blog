@@ -25,10 +25,7 @@ app.config['CKEDITOR_ENABLE_CSRF'] = True
 csrf = CSRFProtect(app)
 
 ##CONNECT TO DB
-try:
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
-except:
-    app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///blog.db"
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 login_manager = LoginManager()

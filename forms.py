@@ -9,7 +9,7 @@ class CreatePostForm(FlaskForm):
     title = StringField("Blog Post Title", validators=[DataRequired()])
     subtitle = StringField("Subtitle", validators=[DataRequired()])
     category = StringField('Category',validators=[DataRequired()])
-    img_url = StringField("Blog Image URL", validators=[DataRequired(), URL()])
+    img_url = StringField("Blog Image URL",default="https://elliethe.sirv.com/Images/pexels-mikael-blomkvist-6476260.jpg?profile=row", validators=[DataRequired(), URL()])
     body = CKEditorField("Blog Content", validators=[DataRequired()])
     submit = SubmitField("Submit Post")
 
@@ -30,7 +30,3 @@ class LoginForm(FlaskForm):
 class CommentForm(FlaskForm):
     comment_text = CKEditorField("Comment", validators=[DataRequired()])
     submit = SubmitField("Submit Comment")
-
-class EditCatForm(FlaskForm):
-    name = StringField("Category",validators=[DataRequired()])
-    submit =SubmitField('Add Category')

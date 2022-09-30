@@ -47,11 +47,6 @@ class User(UserMixin, db.Model):
     posts = relationship("BlogPost", back_populates="author")
     comments = relationship("Comment", back_populates="comment_author")
 
-class Category(db.Model):
-    __tablename__ = "categories"
-    id = db.Column(db.Integer,primary_key=True)
-    classification = db.Column(db.String(100))
-
 class BlogPost(db.Model):
     __tablename__ = "blog_posts"
     id = db.Column(db.Integer, primary_key=True)
@@ -63,8 +58,7 @@ class BlogPost(db.Model):
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
     comments = relationship("Comment", back_populates="parent_post")
-    category_id = db.Column(db.Integer, db.ForeignKey("categories.classification", ondelete='CASCADE'))
-    category = relationship("Category")
+    category = db.Column(db.String(100),nullable=False)
 
 class Comment(db.Model):
     __tablename__ = "comments"
@@ -90,7 +84,7 @@ def admin_only(f):
 
 @app.route('/')
 def get_all_posts():
-    categories_sql = db.session.query(Category.classification).all()
+    categories_sql = db.session.query(BlogPost.category).all()
     categories = [str(category).split("'")[1] for category in set(categories_sql)]
     posts = BlogPost.query.all()
     return render_template("index.html",all_categories=categories, all_posts=posts, current_user=current_user)
@@ -98,9 +92,9 @@ def get_all_posts():
 
 @app.route('/category/<category_name>', methods=["GET", "POST"])
 def get_category(category_name):
-    categories_sql = db.session.query(Category.classification).all()
+    categories_sql = db.session.query(BlogPost.category).all()
     categories = [str(category).split("'")[1] for category in set(categories_sql)]
-    posts= BlogPost.query.filter_by(category_id=category_name).all()
+    posts= BlogPost.query.filter_by(category=category_name).all()
     return render_template("index.html",all_categories=categories, all_posts=posts, current_user=current_user)
 
 @app.route('/register', methods=["GET", "POST"])
@@ -203,7 +197,7 @@ def add_new_post():
             img_url=form.img_url.data,
             author=current_user,
             date=date.today().strftime("%B %d, %Y"),
-            category = Category(classification = form.category.data)
+            category = form.category.data
         )
         db.session.add(new_post)
         db.session.commit()
@@ -224,7 +218,7 @@ def edit_post(post_id):
         img_url=post.img_url,
         author=current_user,
         body=post.body,
-        category=post.category_id
+        category=post.category
     )
     if edit_form.validate_on_submit():
         post.title = edit_form.title.data

@@ -85,6 +85,7 @@ def admin_only(f):
 
 @app.route('/')
 def get_all_posts():
+    db.engine.dispose()
     categories_sql = db.session.query(BlogPost.category).all()
     categories = [str(category).split("'")[1] for category in set(categories_sql)]
     posts = BlogPost.query.all()
@@ -93,6 +94,7 @@ def get_all_posts():
 
 @app.route('/category/<category_name>', methods=["GET", "POST"])
 def get_category(category_name):
+    db.engine.dispose()
     categories_sql = db.session.query(BlogPost.category).all()
     categories = [str(category).split("'")[1] for category in set(categories_sql)]
     posts= BlogPost.query.filter_by(category=category_name).all()
@@ -100,6 +102,7 @@ def get_category(category_name):
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    db.engine.dispose()
     form = RegisterForm()
     if form.validate_on_submit():
 
@@ -129,6 +132,7 @@ def register():
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    db.engine.dispose()
     form = LoginForm()
     if form.validate_on_submit():
         email = form.email.data
@@ -150,6 +154,7 @@ def login():
 
 @app.route('/logout')
 def logout():
+    db.engine.dispose()
     logout_user()
     return redirect(url_for('get_all_posts'))
 
@@ -157,6 +162,7 @@ def logout():
 
 @app.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
+    db.engine.dispose()
     form = CommentForm()
     requested_post = BlogPost.query.get(post_id)
 
@@ -189,6 +195,7 @@ def contact():
 @app.route("/new-post", methods=["GET", "POST"])
 @admin_only
 def add_new_post():
+    db.engine.dispose()
     form = CreatePostForm()
     if form.validate_on_submit():
         new_post = BlogPost(
@@ -212,6 +219,7 @@ def add_new_post():
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
 @admin_only
 def edit_post(post_id):
+    db.engine.dispose()
     post = BlogPost.query.get(post_id)
     edit_form = CreatePostForm(
         title=post.title,
@@ -235,6 +243,7 @@ def edit_post(post_id):
 @app.route("/delete/<int:post_id>")
 @admin_only
 def delete_post(post_id):
+    db.engine.dispose()
     post_to_delete = BlogPost.query.get(post_id)
     db.session.delete(post_to_delete)
     db.session.commit()
